@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
 
-//for validations
-import { validationResult } from 'express-validator';
-
 // slug for create user names without spaces and upper
 import slugify from 'slugify'
 import User from "../models/User";
@@ -10,14 +7,6 @@ import { hashPassword, checkPassword } from '../utils/auth'
 
 export const createAccount = async (req: Request, res: Response) => {
     try {
-
-        //manage errors
-        let errors = validationResult(req);
-
-        if(!errors.isEmpty()){
-          res.status(400).send({errors: errors.array()});
-          return;
-        }
 
         const {email, password} = req.body;
     
@@ -50,21 +39,17 @@ export const createAccount = async (req: Request, res: Response) => {
 }
 
 export const login = async (req: Request, res: Response) => {
-    let errors =  validationResult(req);
-    if(!errors.isEmpty()){
-        res.status(400).send({errors: errors.array()});
-        return;
-    }
 
     const {email, password} = req.body;
 
     const user = await User.findOne({email});
     if(!user){
         res.status(404).send({error: 'El usuario no existe'})
+        return;
     }
 
-    const isPassCorect = checkPassword(password, user.password)
-    if(!isPassCorect){
+    const isPassCorrect = await checkPassword(password, user.password)
+    if(!isPassCorrect){
         res.status(401).send({error: 'Password incorrecto'})
         return;
     }
